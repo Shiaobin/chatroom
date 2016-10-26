@@ -5,6 +5,8 @@
 #include <pthread.h>	/* pthread_create */
 #include <sys/socket.h>	/* socket, bind, listen, accept */
 #include <arpa/inet.h>	/* htons */
+#define NAME_LENGTH 21
+#define MESSAGE_LENGTH 2001
 
 void *client_handler(void *);
 
@@ -43,7 +45,7 @@ int main(int argc, char* argv[])
 	listen(sockfd, 3);
 	printf("Waiting for clients on port %d...\n", port);
 
-	/* Accept */
+	/* Accept and threading*/
 	addrlen = sizeof(struct sockaddr_in);
 	while ((new_socket = accept(sockfd, (struct sockaddr *)&client, (socklen_t*)&addrlen)))
 	{
@@ -56,7 +58,6 @@ int main(int argc, char* argv[])
 			fprintf(stderr, "Could not create thread. \n");
 			exit(1);
 		}
-		printf("client [] log in room []\n");
 
 	}
 
@@ -66,18 +67,35 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	printf("Exit form main.\n");
+
 	return 0;
 }
 
 void *client_handler(void *socket_desc)
 {
 	int sockfd = *(int*)socket_desc;
-	char *message;
+	int read_size;
+	char *message, name[NAME_LENGTH], client_message[MESSAGE_LENGTH];
 
 	pthread_detach(pthread_self());
 
-	message = "Hello.";
-	write(sockfd, message, strlen(message));
+	if ((read_size = recv(sockfd, client_message, MESSAGE_LENGTH , 0)) > 0)
+	{
+		/* Get client's name */
+		strncpy(name, client_message, NAME_LENGTH);
+		printf("client [%s] log in room []\n", name);
+	}
+
+	/* Keep send message to client to test client */
+	while (1)
+	{
+		sleep(10);
+		message = "Hello.";
+		write(sockfd, message, strlen(message));
+		printf("Sending message to [%s]\n", name);
+	}
+	printf("Exit from thread.\n");
 
 	return 0;
 }

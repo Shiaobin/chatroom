@@ -2,7 +2,7 @@ CC = gcc
 INCLUDE = .
 CFLAGS = -g2 -Wall -ansi -pedantic
 LIBS = -lpthread
-SRCS = server.c
+SRCS = client.c server.c
 OBJS = $(SRCS:.c=.o)
 BINS = $(SRCS:.c=)
 
