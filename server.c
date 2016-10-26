@@ -1,3 +1,5 @@
+#include <errno.h>	/* errno */
+#include <signal.h>	/* signal */
 #include <stdio.h>	/* printf, fprintf */
 #include <stdlib.h>	/* strtol, exit */
 #include <string.h>	/* strlen */
@@ -14,6 +16,9 @@ int main(int argc, char* argv[])
 {
 	int sockfd, port, addrlen, new_socket, *new_sock;
 	struct sockaddr_in server, client;
+
+	/* Ignore signal SIGPIPE */
+	signal(SIGPIPE,SIG_IGN);
 
 	/* Read cli arguments */
 	if (argc < 2)
@@ -67,8 +72,6 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	printf("Exit form main.\n");
-
 	return 0;
 }
 
@@ -92,10 +95,13 @@ void *client_handler(void *socket_desc)
 	{
 		sleep(10);
 		message = "Hello.";
-		write(sockfd, message, strlen(message));
+		if ((write(sockfd, message, strlen(message))) < 0 && errno == EPIPE)
+		{
+			printf("client [%s] leave.\n", name);
+			break;
+		}
 		printf("Sending message to [%s]\n", name);
 	}
-	printf("Exit from thread.\n");
 
 	return 0;
 }
